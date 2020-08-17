@@ -1,7 +1,3 @@
----
-
-
----
 
 <h1 id="project--data-pipelines-with-airflow">Project:  Data Pipelines with Airflow</h1>
 <h2 id="introduction">Introduction</h2>
