@@ -15,17 +15,19 @@ class DataQualityOperator(BaseOperator):
 
         super(DataQualityOperator, self).__init__(*args, **kwargs)
         self.redshift_conn_id = redshift_conn_id
-        self.sql_query = sql_query
+        self.table_name = table_name
+        self.sql_query = sql_query # e.g. SELECT COUNT(*) FROM {self.table_name}
         self.expected_result = expected_result
 
     def execute(self, context):
-        self.log.info("Getting Redshift Credentials")
-        redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
-        self.log.info("Created Redshift connection")
+        self.log.info("Retrieving Redshift Credentials")
+        redshift_hook = PostgresHook(postgres_conn_id=self.redshift_conn_id)
+        self.log.info("Connected to Redshift")
         
-        self.log.info("Performing data quality check")
-        results = redshift.get_records(self.sql_query)
-        if results[0][0] != self.expected_result:
+        self.log.info("Data quality check...")
+        records = redshift_hook.get_records(self.sql_query)
+        
+        if records [0][0] != self.expected_result:
             raise ValueError(f"""
                 Data quality check has failed. \
                 {results[0][0]} does not equal {self.expected_result}
