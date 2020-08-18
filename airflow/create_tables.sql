@@ -62,7 +62,7 @@ CREATE TABLE public.staging_songs (
 	"year" int4
 );
 
-CREATE TABLE IF NOT EXISTS public."time" (
+CREATE TABLE public."time" (
 	start_time timestamp NOT NULL,
 	"hour" int4,
 	"day" int4,
