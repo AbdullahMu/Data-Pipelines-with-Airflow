@@ -6,7 +6,8 @@ from airflow.utils.decorators import apply_defaults
 class DataQualityOperator(BaseOperator):
     
     '''
-        this performs quality checks on data in our Amazon Redshift RDB after ETL
+        this operator performs quality checks on data in our Amazon Redshift RDB after ETL
+        the operator is heavily influenced by the HasRowsOperator used in lesson excercises
 
         Parameters
         ----------
@@ -31,8 +32,12 @@ class DataQualityOperator(BaseOperator):
         self.column_null_check = column_null_check
 
     def execute(self, context):
+        # connect to Amazon Redshift
         redshift_hook = PostgresHook(self.redshift_conn_id)
+        
+        # run SELECT COUNT(*) query to retrieve the number of rows in public.songplays table
         records = redshift_hook.get_records("SELECT COUNT(*) FROM public.songplays ")
+        
         if len(records) < 1 or len(records[0]) < 1:
             raise ValueError("Data quality check failed. songplays table returned no results")
         num_records = records[0][0]
@@ -40,6 +45,7 @@ class DataQualityOperator(BaseOperator):
             raise ValueError("Data quality check failed. songplays contained 0 rows")
         self.log.info(f"DataQualityOperator implemented: Data quality on table songplays check passed with {records[0][0]} records")
         
+        # run futher checks on the list of columns provided
         if column_null_check:
             
             null_records = 0
