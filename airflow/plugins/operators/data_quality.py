@@ -4,7 +4,6 @@ from airflow.utils.decorators import apply_defaults
 
 
 class DataQualityOperator(BaseOperator):
-
     '''
         this operator performs quality checks on data in our Amazon Redshift RDB after ETL
         the operator is heavily influenced by the HasRowsOperator used in lesson excercises
