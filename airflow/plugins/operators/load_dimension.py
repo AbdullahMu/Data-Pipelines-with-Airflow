@@ -3,30 +3,55 @@ from airflow.models import BaseOperator
 from airflow.utils.decorators import apply_defaults
 
 class LoadDimensionOperator(BaseOperator):
+    '''
+        this operator loads dimension tables into our Amazon Redshift RDB
+
+        Parameters
+        ----------
+        redshift_conn_id : str
+            Amazon Redshift RDB credentials
+            
+        table : str
+            table name which data will be inserted to
+            
+        sql : str
+            the sql query that will be used to insert the fact table
+            
+        truncate : bool
+            flag indicats truncating inserted dimensions
+    '''
 
     ui_color = '#80BD9E'
 
     @apply_defaults
     def __init__(self,
-                 redshift_conn_id = "",
-                 table = "",
-                 sql = "",
-                 update_mode = "overwrite",
+                 redshift_conn_id="",
+                 table="",
+                 sql="",
+                 truncate=False,
                  *args, **kwargs):
 
         super(LoadDimensionOperator, self).__init__(*args, **kwargs)
-        self.redshift_conn_id=redshift_conn_id
-        self.table=table
-        self.sql=sql
-        self.update_mode=update_mode
+        # LoadDimensionOperator parameters:
+        self.redshift_conn_id = redshift_conn_id
+        self.table = table
+        self.sql = sql
+        self.truncate=truncate
 
     def execute(self, context):
-        self.log.info('LoadDimensionOperator not implemented yet')
+        # connect to Amazon Redshift
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
         
-        self.log.info('Load dimension table {}'.format(self.table))
-        if self.update_mode == 'overwrite':
-            update_query = 'TRUNCATE {}; INSERT INTO {} ({})'.format(self.table, self.table, self.sql)
-        elif self.update_mode == 'insert':
-            update_query = 'INSERT INTO {} ({})'.format(self.table, self.sql)
-        redshift.run(update_query)
+        # format query for loading the dimension table
+        if self.truncate:
+            
+            formatted_sql = f"TRUNCATE {self.table}; INSERT INTO {self.table} ({self.sql})"
+            
+        else:
+            
+            formatted_sql = f"INSERT INTO {self.table} ({self.sql})"
+            
+        # Execute the insertion query on Redshift hook
+        redshift.run(formatted_sql)
+        
+        self.log.info(f'LoadDimensionOperator implemented: Dimension table loaded to {self.table}')
