@@ -8,27 +8,20 @@ class LoadFactOperator(BaseOperator):
 
     @apply_defaults
     def __init__(self,
-                 redshift_conn_id="", 
+                 redshift_conn_id="",
                  table="",
-                 sql_query="",
+                 sql="",
                  *args, **kwargs):
 
         super(LoadFactOperator, self).__init__(*args, **kwargs)
+        # LoadFactOperator parameters:
         self.redshift_conn_id = redshift_conn_id
         self.table = table
-        self.sql_query = sql_query
+        self.sql=sql
 
     def execute(self, context):
-        redshift_hook = PostgresHook("redshift")
-        self.log.info("Getting Redshift Credentials")
+        # connect to Amazon Redshift
         redshift = PostgresHook(postgres_conn_id=self.redshift_conn_id)
-        self.log.info("Created Redshift connection")
-                 
-        self.log.info(f'Loading data into {self.table} fact table in Redshift...')  
-        formatted_sql_query = f'''
-            INSERT INTO {self.table}
-            {self.sql_query}
-        '''
-        redshift_hook.run(formatted_sql_query)        
-        self.log.info("Data loaded into {table} successfully".format(table=self.table))
-        
+        # Execute the insertion query on Redshift hook
+        redshift.run(f"INSERT INTO {self.table} {self.sql}")
+        self.log.info(f"LoadFactOperator implemented: Data inserted into {self.table} in Redshift ')
