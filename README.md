@@ -60,7 +60,7 @@ and what is the target table.</p>
 </ul>
 <h2 id="instructions">Instructions</h2>
 <ul>
-<li>Run <code>/opt/airflow.start.sh</code> to start the Airflow webserver.</li>
+<li>Run <code>/opt/airflow/start.sh</code> to start the Airflow webserver.</li>
 <li>Once the Airflow web server is ready, you can access the Airflow UI by clicking on the blue <code>Access Airflow</code> button.</li>
 </ul>
 <p>This project is completed as a part of  <a href="https://www.udacity.com/course/data-engineer-nanodegree--nd027?utm_source=gsem_brand&amp;utm_medium=ads_r&amp;utm_campaign=8826748985_c&amp;utm_term=88603514323&amp;utm_keyword=udacity%20data%20engineer_e&amp;gclid=CjwKCAjw1ej5BRBhEiwAfHyh1LJE9bbir4kCyJjj0cAdE5HBb9F9YOxcXwrQNZLz_ieHirhgGkPd8xoC7tAQAvD_BwE">Udacity Data Engineer Nanodegree</a> program.</p>
