@@ -12,8 +12,8 @@ class DataQualityOperator(BaseOperator):
         redshift_conn_id : str
             Amazon Redshift RDB credentials
 
-        column_null_check : list
-            columns names which will go through futher checks, counting the numbers of nulls in them
+        data_quality_check : list
+            a list of dictionaries including the SQL query to be excuted for the check with key 'query' and its expected retured value with key 'expected_result' if other than 0
     '''
 
     ui_color = '#89DA59'
@@ -21,13 +21,13 @@ class DataQualityOperator(BaseOperator):
     @apply_defaults
     def __init__(self,
                  redshift_conn_id="",
-                 column_null_check=None,
+                 data_quality_check=None,
                  *args, **kwargs):
 
         super(DataQualityOperator, self).__init__(*args, **kwargs)
         # DataQualityOperator parameters:
         self.redshift_conn_id = redshift_conn_id
-        self.column_null_check = column_null_check
+        self.data_quality_check = data_quality_check
 
     def execute(self, context):
         # connect to Amazon Redshift
@@ -43,19 +43,22 @@ class DataQualityOperator(BaseOperator):
             raise ValueError("Data quality check failed. songplays contained 0 rows")
         self.log.info(f"DataQualityOperator implemented: Data quality on table songplays check passed with {records[0][0]} records")
 
-        # run futher checks on the list of columns provided
-        if self.column_null_check:
-            
-            null_records = 0
-            
+        # run futher checks if 'data_quality_check' is provided
+        if self.data_quality_check:
+            check_index = 0
             try:
-                for column in self.column_null_check:
-                    null_query = f'''
-                                     SELECT COUNT(*) FROM public.songplays WHERE {column} IS NULL
-                                 '''
-                    null_records += redshift_hook.get_records(null_query)
+                for check in self.data_quality_check:
+                    check_query = check['query']
+                    check_result = redshift_hook.get_records(check_query)
+                    expected_result = check.get('expected_result', 0)  # get check['expected_result'] if exists, else assume 0
+                    
+                    if check_result = expected_result:
+                        self.log.info(f"additional data quality ckeck {check_index} passed")
+                    else:
+                        self.log.info(f"additional data quality ckeck {check_index} failed, returned: {check_result}, expected: {expected_result}")
+                    check_index += 1
                     
             except NameError:
-                raise NameError("wrong column name")
+                raise NameError("wrong data type for data qualtiy checks")
 
-                self.log.info(f"table songplays has {null_records[0][0]} null records")
+                
