@@ -47,8 +47,8 @@ default_args = {
 dag = DAG('udac_example_dag',
           default_args=default_args,
           description='Load and transform data in Redshift with Airflow',
-          schedule_interval='@hourly' # or alternatively '0 * * * *'
-        )
+          schedule_interval='@hourly'  # or alternatively '0 * * * *'
+          )
 
 
 start_operator = DummyOperator(task_id='Begin_execution',  dag=dag)
@@ -61,9 +61,9 @@ stage_events_to_redshift = StageToRedshiftOperator(
     s3_bucket='udacity-dend',
     s3_key='log_data',
     json_path_option='s3://udacity-dend/log_json_path.json',
-    table='staging_events'   
+    table='staging_events'
 )
-        
+
 stage_songs_to_redshift = StageToRedshiftOperator(
     task_id='Stage_songs',
     dag=dag,
@@ -72,7 +72,7 @@ stage_songs_to_redshift = StageToRedshiftOperator(
     s3_bucket='udacity-dend',
     s3_key='song_data',
     json_path_option='s3://udacity-dend/song_json_path.json',
-    table='staging_songs'   
+    table='staging_songs'
 )
 
 load_songplays_table = LoadFactOperator(
@@ -123,7 +123,13 @@ run_quality_checks = DataQualityOperator(
     task_id='Run_data_quality_checks',
     dag=dag,
     redshift_conn_id="redshift",
-    check_nulls=[] #pass column names in a list to check for null values
+    # pass a dictionary including the SQL query to be excuted for the check with key 'query' 
+    # and its expected retured value with key 'expected_result' if other than 0
+    quality_checks = [
+        {'check_query': 'SELECT COUNT(*) FROM public.songplays WHERE userid IS NULL'},
+        {'check_query': 'SELECT COUNT(*) FROM public.artists WHERE name IS NULL'},
+        {'check_query': 'SELECT COUNT(DISTINCT "level") FROM public.songplays', 'expected_result': 2}
+    ]
 )
 
 end_operator = DummyOperator(task_id='Stop_execution',  dag=dag)
@@ -144,22 +150,24 @@ start_operator >> [stage_events_to_redshift,
                                                                         load_artist_dimension_table, 
                                                                         load_time_dimension_table] >> run_quality_checks >> end_operator
 
-# albeit rather verbose configuration of DAG dependencies
+# Alternative, albeit rather verbose, configuration of DAG dependencies
 
-# start_operator >> stage_events_to_redshift
-# start_operator >> stage_songs_to_redshift
+'''
+start_operator >> stage_events_to_redshift
+start_operator >> stage_songs_to_redshift
 
-# stage_events_to_redshift >> load_songplays_table
-# stage_songs_to_redshift >> load_songplays_table
+stage_events_to_redshift >> load_songplays_table
+stage_songs_to_redshift >> load_songplays_table
 
-# load_songplays_table >> load_user_dimension_table
-# load_songplays_table >> load_song_dimension_table
-# load_songplays_table >> load_artist_dimension_table
-# load_songplays_table >> load_time_dimension_table         
+load_songplays_table >> load_user_dimension_table
+load_songplays_table >> load_song_dimension_table
+load_songplays_table >> load_artist_dimension_table
+load_songplays_table >> load_time_dimension_table
 
-# load_user_dimension_table >> run_quality_checks
-# load_song_dimension_table >> run_quality_checks
-# load_artist_dimension_table >> run_quality_checks
-# load_time_dimension_table >> run_quality_checks
+load_user_dimension_table >> run_quality_checks
+load_song_dimension_table >> run_quality_checks
+load_artist_dimension_table >> run_quality_checks
+load_time_dimension_table >> run_quality_checks
 
-# run_quality_checks >> end_operator
+run_quality_checks >> end_operator
+'''
